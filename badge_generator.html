@@ -169,6 +169,33 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
 .session-check input { width:15px; height:15px; cursor:pointer; accent-color:#1a1a2e; }
 .session-swatch { width:12px; height:12px; border-radius:2px; flex-shrink:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 
+/* CIT stamp */
+.cit-stamp {
+  position: absolute;
+  bottom: 0.18in;
+  right: 0.08in;
+  width: 0.55in;
+  height: 0.55in;
+  border: 2.5pt solid #cc1a1a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-18deg);
+  opacity: 0.85;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.cit-stamp span {
+  color: #cc1a1a !important;
+  font-size: 9pt;
+  font-weight: 800;
+  letter-spacing: .06em;
+  font-family: Georgia, serif;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
 .fold-line {
   width: 1px; flex-shrink: 0;
   background: repeating-linear-gradient(to bottom,#888 0,#888 5px,transparent 5px,transparent 10px);
@@ -298,6 +325,7 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
     { key:'dob',     label:'Date of birth',         hints:['dob','birth'],                     req:true  },
     { key:'hair',    label:'Hair color',            hints:['hair'],                            req:false },
     { key:'eyes',    label:'Eye color',             hints:['eye'],                             req:false },
+    { key:'agegroup',label:'Age group',             hints:['agegroup','age','group','level'],   req:false },
     { key:'pfirst',  label:'Parent first name',     hints:['pfirst','parentfirst','parentf'],  req:true  },
     { key:'plast',   label:'Parent last name',      hints:['plast','parentlast','parentl'],    req:true  },
     { key:'phone',   label:'Phone number',          hints:['phone','tel','mobile'],            req:true  },
@@ -683,7 +711,7 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
   }
 
   /* ── Hardcoded defaults — paste JSON from "Copy defaults to clipboard" here ── */
-  var HARDCODED_DEFAULTS = {"first":"8","last":"9","dob":"10","hair":"29","eyes":"30","pfirst":"16","plast":"17","phone":"25","session":"15"};
+  var HARDCODED_DEFAULTS = {"first":"8","last":"9","dob":"10","hair":"29","eyes":"30","agegroup":"11","pfirst":"16","plast":"17","phone":"25","session":"15"};
 
   /* ── localStorage key for saved defaults ── */
   var DEFAULTS_KEY = 'saddleup_col_defaults';
@@ -879,6 +907,12 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
     return raw;
   }
 
+  /* Strip parenthetical from age group: "Wheelie (ages 8-10)" -> "Wheelie" */
+  function stripAgeGroup(s){
+    if(!s) return '';
+    return s.replace(/\s*\(.*?\)\s*/g,'').trim();
+  }
+
   /* ── Hardcoded session colors — paste JSON from "Copy session colors" here ── */
   var HARDCODED_COLORS = {"Aug 10-14 Hillsboro Tyson Rec Center":"#2d6a4f","Aug 17-21 Hillsboro UCC":"#1d3557","Aug 3-7 Hillsboro UCC":"#7b3f9e","July 13-17 Hillsboro UCC":"#c1440e","July 20-24  Tigard Fanno Creek House":"#0077b6","July 6-10 Hillsboro UCC":"#a0522d","June 22-26 Forest Grove":"#3a7d44","June 29 - July 3 Forest Grove":"#7b2d8b"};
 
@@ -904,11 +938,14 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
 
   /* ── Build front element entirely via DOM (no innerHTML += after wiring) ── */
   function makeFrontEl(row){
-    var sess  = getval(row,'session')||'SUMMER CAMP';
-    var color = colorMap[sess]||COLORS[0];
-    var name  = ((getval(row,'first')+' '+getval(row,'last')).trim())||'Camper Name';
-    var key   = rowKey(row);
-    var photo = photoFor(row);
+    var sess     = getval(row,'session')||'SUMMER CAMP';
+    var color    = colorMap[sess]||COLORS[0];
+    var name     = ((getval(row,'first')+' '+getval(row,'last')).trim())||'Camper Name';
+    var key      = rowKey(row);
+    var photo    = photoFor(row);
+    var ageRaw   = getval(row,'agegroup');
+    var ageLabel = stripAgeGroup(ageRaw);
+    var isCIT    = /counselor\s*in\s*training/i.test(ageRaw);
 
     var front = document.createElement('div'); front.className='front';
 
@@ -937,9 +974,10 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
       var v = document.createElement('span'); v.className='f-val'; v.textContent=val||'—';
       row.appendChild(l); row.appendChild(v); info.appendChild(row);
     }
-    addRow('DOB',  getval(row,'dob'));
-    addRow('Hair', getval(row,'hair'));
-    addRow('Eyes', getval(row,'eyes'));
+    addRow('DOB',   getval(row,'dob'));
+    addRow('Hair',  getval(row,'hair'));
+    addRow('Eyes',  getval(row,'eyes'));
+    if(ageLabel) addRow('Group', ageLabel);
 
     body.appendChild(info);
     front.appendChild(body);
@@ -948,6 +986,14 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
     var foot = document.createElement('div'); foot.className='f-foot';
     var fs = document.createElement('span'); fs.textContent='Saddle Up Bike Camp 2026';
     foot.appendChild(fs); front.appendChild(foot);
+
+    /* CIT stamp — overlaid in lower-right corner */
+    if(isCIT){
+      var stamp = document.createElement('div'); stamp.className='cit-stamp';
+      stamp.style.cssText+='-webkit-print-color-adjust:exact;print-color-adjust:exact;';
+      var st = document.createElement('span'); st.textContent='CIT';
+      stamp.appendChild(st); front.appendChild(stamp);
+    }
 
     return front;
   }

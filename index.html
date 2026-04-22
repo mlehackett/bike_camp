@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Saddle Up Bike Camp 2026 — Tools</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+       background: #f0f0f0; color: #1a1a1a; min-height: 100vh;
+       display: flex; align-items: center; justify-content: center; }
+.container { max-width: 540px; width: 100%; padding: 2rem 1.5rem; }
+h1 { font-size: 20px; font-weight: 700; color: #1d3557; margin-bottom: 4px; }
+.sub { font-size: 14px; color: #888; margin-bottom: 2rem; }
+.tools { display: flex; flex-direction: column; gap: 12px; }
+a.tool {
+  display: flex; align-items: center; gap: 16px;
+  background: white; border: 1px solid #ddd; border-radius: 10px;
+  padding: 1rem 1.25rem; text-decoration: none; color: inherit;
+  transition: box-shadow .15s, border-color .15s;
+}
+a.tool:hover { border-color: #1d3557; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.tool-icon { font-size: 26px; flex-shrink: 0; width: 36px; text-align: center; }
+.tool-text { display: flex; flex-direction: column; gap: 2px; }
+.tool-name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+.tool-desc { font-size: 12px; color: #888; }
+.footer { margin-top: 2rem; font-size: 12px; color: #bbb; text-align: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Saddle Up Bike Camp 2026</h1>
+  <p class="sub">WashCo Bikes — Camp Tools</p>
+
+  <div class="tools">
+    <a class="tool" href="badge_generator.html">
+      <div class="tool-icon">🪪</div>
+      <div class="tool-text">
+        <span class="tool-name">Badge Generator</span>
+        <span class="tool-desc">ID badges with photos, session colors, and emergency contacts</span>
+      </div>
+    </a>
+
+    <a class="tool" href="test_form_generator.html">
+      <div class="tool-icon">📋</div>
+      <div class="tool-text">
+        <span class="tool-name">Pre/Post Test Forms</span>
+        <span class="tool-desc">Grouped by session and age group, 5 campers per page</span>
+      </div>
+    </a>
+
+    <a class="tool" href="completion_certificate_generator.html">
+      <div class="tool-icon">🎓</div>
+      <div class="tool-text">
+        <span class="tool-name">Completion Certificates</span>
+        <span class="tool-desc">One certificate per camper, landscape, ready to print and sign</span>
+      </div>
+    </a>
+
+    <a class="tool" href="bike_gift_certificate_generator.html">
+      <div class="tool-icon">🚲</div>
+      <div class="tool-text">
+        <span class="tool-name">Adopt a Bike Gift Certificates</span>
+        <span class="tool-desc">50% discount and scholarship recipients — 2-page PDF per camper</span>
+      </div>
+    </a>
+  </div>
+
+  <p class="footer">Saddle Up Bike Camp 2026 &mdash; mlehackett/bike_camp</p>
+</div>
+</body>
+</html>

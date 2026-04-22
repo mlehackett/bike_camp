@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Saddle Up Bike Camp 2026 — Pre/Post Test Form Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ============================================================
+   SCREEN UI
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+       background: #f0f0f0; color: #1a1a1a; }
+.ui  { max-width: 780px; margin: 0 auto; padding: 2rem 1.5rem; }
+h1   { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.sub { font-size: 14px; color: #666; margin-bottom: 2rem; }
+.card { background: white; border: 1px solid #ddd; border-radius: 10px;
+        padding: 1.5rem; margin-bottom: 1.25rem; }
+.card h3 { font-size: 11px; font-weight: 600; color: #888; margin-bottom: 14px;
+           letter-spacing: .06em; text-transform: uppercase; }
+.drop-zone { border: 2px dashed #ccc; border-radius: 8px; padding: 2.5rem;
+             text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
+.drop-zone:hover, .drop-zone.over { border-color: #1a1a2e; background: #f0f4ff; }
+.drop-zone p { font-size: 15px; color: #555; margin-top: 5px; }
+.drop-zone strong { color: #1a1a1a; }
+.map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.map-row  { display: flex; flex-direction: column; gap: 5px; }
+.map-row label { font-size: 13px; color: #555; }
+select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
+         border-radius: 6px; font-size: 13px; background: white; }
+.actions { display: flex; gap: 12px; align-items: center; margin-bottom: 1.5rem; }
+.btn { padding: 9px 22px; border: 1px solid #ccc; border-radius: 8px;
+       font-size: 14px; font-weight: 500; cursor: pointer; background: white; }
+.btn:hover { background: #f0f0f0; }
+.btn-primary { background: #1a1a2e; color: white; border-color: transparent; }
+.btn-primary:hover { background: #2a2a4e; }
+.btn-print { background: #2d6a4f; color: white; border-color: transparent; }
+.btn-print:hover { background: #245a41; }
+.file-status { font-size: 13px; color: #666; margin-top: 10px; min-height: 18px; }
+.preview-info { font-size: 13px; color: #666; margin-bottom: 12px; }
+.session-check { display:flex; align-items:center; gap:7px; font-size:13px; color:#333; cursor:pointer; }
+.session-check input { width:15px; height:15px; cursor:pointer; accent-color:#1a1a2e; }
+.session-swatch { width:12px; height:12px; border-radius:2px; flex-shrink:0; }
+.page-label { font-size: 12px; color: #999; margin-bottom: 6px; }
+
+/* ============================================================
+   TEST FORM PAGE — landscape
+   ============================================================ */
+.form-page {
+  background: white;
+  width: 11in;
+  min-height: 8.5in;
+  padding: 0.4in 0.4in 0.3in;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15in;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.form-session {
+  font-family: Arial, sans-serif;
+  font-size: 13pt;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.05in;
+}
+
+/* Test table */
+.test-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: Arial, sans-serif;
+}
+.test-table th, .test-table td {
+  border: 1px solid #aaa;
+  padding: 4px 6px;
+  vertical-align: bottom;
+  font-size: 9pt;
+}
+/* Col 1: number */
+.test-table .col-num { width: 0.28in; text-align: center; font-weight: 600; }
+/* Col 2: question */
+.test-table .col-q   { width: 3.4in; }
+/* Cols 3-7: camper answer columns */
+.test-table .col-c   { }
+
+/* Header row */
+.test-table .hdr-row th {
+  background: #1a1a2e !important;
+  color: white !important;
+  font-weight: 600;
+  font-size: 9pt;
+  vertical-align: bottom;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.test-table .hdr-row .col-q {
+  font-size: 9pt;
+  text-align: left;
+}
+.test-table .hdr-row .col-c {
+  font-size: 8pt;
+  text-align: center;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Question rows */
+.test-table .q-row td { height: 0.42in; vertical-align: middle; }
+.test-table .q-row .col-num { color: #555; }
+.test-table .q-row .col-q { font-size: 8.5pt; }
+
+/* Blank rows */
+.test-table .blank-row td { height: 0.32in; }
+
+/* Divider between pre and post */
+.section-divider {
+  height: 0.12in;
+  flex-shrink: 0;
+}
+
+</style>
+</head>
+<body>
+<div class="ui">
+  <div class="no-print">
+    <h1>Saddle Up Bike Camp 2026 — Pre/Post Test Forms</h1>
+    <p class="sub">Upload your camper spreadsheet &middot; 5 campers per page &middot; landscape</p>
+
+    <div class="card">
+      <h3>Step 1 &mdash; Upload spreadsheet</h3>
+      <div class="drop-zone" id="dz-sheet">
+        <p><strong>Click to upload</strong> or drag and drop</p>
+        <p style="font-size:13px;color:#999;margin-top:6px;">CSV or Excel (.xlsx, .xls)</p>
+      </div>
+      <input type="file" id="fi-sheet" accept=".csv,.xlsx,.xls" style="display:none">
+      <div class="file-status" id="sheet-status"></div>
+    </div>
+
+    <div class="card" id="card-map" style="display:none">
+      <h3>Step 2 &mdash; Map your columns</h3>
+      <div class="map-grid" id="map-grid"></div>
+    </div>
+
+    <div class="card" id="card-filter" style="display:none">
+      <h3>Step 3 &mdash; Select sessions to print</h3>
+      <div id="session-checkboxes" style="display:flex;flex-wrap:wrap;gap:10px 24px;margin-bottom:12px;"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn" id="btn-check-all"   style="font-size:12px;padding:5px 12px;">Select all</button>
+        <button class="btn" id="btn-uncheck-all" style="font-size:12px;padding:5px 12px;">Clear all</button>
+      </div>
+    </div>
+
+    <div class="actions" id="card-actions" style="display:none">
+      <button class="btn btn-primary" id="btn-generate">Generate forms</button>
+      <button class="btn btn-print"   id="btn-print" style="display:none">&#x1F5A8;&nbsp; Print / Save PDF</button>
+    </div>
+  </div>
+
+  <div id="preview-section" style="display:none">
+    <p class="preview-info" id="preview-info"></p>
+    <div id="pages"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ── Questions (from template) ── */
+  var QUESTIONS = [
+    'What is the ABC Quick Check?',
+    'What are the five rules for road?',
+    'What are the hand signals for left, right and stop?',
+    'How do you make an appropriate stop?',
+    'On a scale from 1 to 10, how comfortable are you in riding on the street with traffic?'
+  ];
+
+  /* ── Hardcoded session colors ── */
+  var SESSION_COLORS = {
+    "Aug 10-14 Hillsboro Tyson Rec Center":"#2d6a4f",
+    "Aug 17-21 Hillsboro UCC":"#1d3557",
+    "Aug 3-7 Hillsboro UCC":"#7b3f9e",
+    "July 13-17 Hillsboro UCC":"#c1440e",
+    "July 20-24  Tigard Fanno Creek House":"#0077b6",
+    "July 6-10 Hillsboro UCC":"#a0522d",
+    "June 22-26 Forest Grove":"#3a7d44",
+    "June 29 - July 3 Forest Grove":"#7b2d8b"
+  };
+
+  /* ── Column fields ── */
+  var FIELDS = [
+    { key:'first',    label:"Child's first name",  hints:['first','fname','child'],         req:true  },
+    { key:'last',     label:"Child's last name",   hints:['last','lname','surname'],        req:true  },
+    { key:'agegroup', label:'Age group',            hints:['agegroup','age','group','level'],req:false },
+    { key:'session',  label:'Session / week',      hints:['session','week','group','camp'], req:false },
+  ];
+
+  /* ── Hardcoded defaults (same schema as badge tool) ── */
+  var HARDCODED_DEFAULTS = {"first":"8","last":"9","agegroup":"11","session":"15"};
+
+  var headers=[], rows=[];
+
+  /* ── Wire file input ── */
+  var dz=document.getElementById('dz-sheet');
+  var fi=document.getElementById('fi-sheet');
+  on(dz,'click',function(){ fi.click(); });
+  on(dz,'dragover',function(e){ e.preventDefault(); dz.classList.add('over'); });
+  on(dz,'dragleave',function(){ dz.classList.remove('over'); });
+  on(dz,'drop',function(e){ e.preventDefault(); dz.classList.remove('over'); loadSheet(e.dataTransfer.files[0]); });
+  on(fi,'change',function(e){ if(e.target.files[0]) loadSheet(e.target.files[0]); });
+  on(document.getElementById('btn-generate'),'click', generate);
+  on(document.getElementById('btn-print'),'click',function(){ window.print(); });
+
+  function on(el,ev,fn){ el.addEventListener(ev,fn); }
+
+  function loadSheet(file){
+    var r=new FileReader();
+    r.onload=function(e){
+      try{
+        var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        var ws=wb.Sheets[wb.SheetNames[0]];
+        var data=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+        if(!data||data.length<2){ setSt('File appears empty.'); return; }
+        headers=data[0].map(function(h){ return String(h); });
+        rows=data.slice(1).filter(function(r){ return r.some(function(c){ return c!==''; }); });
+        setSt('Loaded '+rows.length+' records from "'+file.name+'"');
+        buildMap();
+      }catch(err){ setSt('Could not read file: '+err.message); }
+    };
+    r.readAsArrayBuffer(file);
+  }
+
+  function setSt(m){ document.getElementById('sheet-status').textContent=m; }
+
+  function colLetter(i){
+    var s=''; i++;
+    while(i>0){ i--; s=String.fromCharCode(65+(i%26))+s; i=Math.floor(i/26); }
+    return s;
+  }
+
+  function detect(hints){
+    return headers.findIndex(function(h){
+      var hl=h.toLowerCase().replace(/[\s_\-]/g,'');
+      return hints.some(function(hint){ return hl.indexOf(hint)!==-1; });
+    });
+  }
+
+  function buildMap(){
+    document.getElementById('card-map').style.display='';
+    document.getElementById('card-actions').style.display='flex';
+    var grid=document.getElementById('map-grid'); grid.innerHTML='';
+    var opts='<option value="-1">-- skip --</option>'+
+      headers.map(function(h,i){ return '<option value="'+i+'">'+colLetter(i)+' \u2013 '+esc(h)+'</option>'; }).join('');
+    var saved=HARDCODED_DEFAULTS||{};
+    FIELDS.forEach(function(f){
+      var d=document.createElement('div'); d.className='map-row';
+      d.innerHTML='<label>'+f.label+(f.req?' *':'')+'</label><select id="col-'+f.key+'">'+opts+'</select>';
+      grid.appendChild(d);
+      var sel=document.getElementById('col-'+f.key);
+      if(saved[f.key]!==undefined){
+        var si=parseInt(saved[f.key],10);
+        if(si>=0&&si<headers.length){ sel.value=String(si); }
+      } else {
+        var a=detect(f.hints); if(a>=0) sel.value=String(a);
+      }
+    });
+    buildSessionFilter();
+    var sessSel=document.getElementById('col-session');
+    if(sessSel) on(sessSel,'change',buildSessionFilter);
+  }
+
+  function getval(row,key){
+    var s=document.getElementById('col-'+key);
+    if(!s) return '';
+    var i=parseInt(s.value,10);
+    if(isNaN(i)||i<0) return '';
+    var v=row[i];
+    if(v===null||v===undefined) return '';
+    return String(v).trim();
+  }
+
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ── Session filter ── */
+  function buildSessionFilter(){
+    var colSel=document.getElementById('col-session');
+    var colIdx=colSel?parseInt(colSel.value,10):-1;
+    var seen=[];
+    rows.forEach(function(row){
+      var s=colIdx>=0&&row[colIdx]!==undefined&&row[colIdx]!==''?String(row[colIdx]).trim():'(no session)';
+      if(seen.indexOf(s)<0) seen.push(s);
+    });
+    seen.sort();
+    var wrap=document.getElementById('session-checkboxes'); wrap.innerHTML='';
+    seen.forEach(function(s){
+      var color=SESSION_COLORS[s]||'#444';
+      var lbl=document.createElement('label'); lbl.className='session-check';
+      var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=true; cb.value=s;
+      var sw=document.createElement('div'); sw.className='session-swatch'; sw.style.background=color;
+      var txt=document.createTextNode(s);
+      lbl.appendChild(cb); lbl.appendChild(sw); lbl.appendChild(txt);
+      wrap.appendChild(lbl);
+    });
+    document.getElementById('card-filter').style.display='';
+    on(document.getElementById('btn-check-all'),  'click',function(){ wrap.querySelectorAll('input').forEach(function(cb){ cb.checked=true; }); });
+    on(document.getElementById('btn-uncheck-all'),'click',function(){ wrap.querySelectorAll('input').forEach(function(cb){ cb.checked=false; }); });
+  }
+
+  function getSelectedSessions(){
+    var sel=[];
+    document.getElementById('session-checkboxes').querySelectorAll('input:checked').forEach(function(cb){ sel.push(cb.value); });
+    return sel;
+  }
+
+  /* ── Build one test table (pre or post) ── */
+  function makeTable(label, campers){
+    var tbl=document.createElement('table'); tbl.className='test-table';
+
+    /* Header row */
+    var thead=document.createElement('thead');
+    var htr=document.createElement('tr'); htr.className='hdr-row';
+
+    function th(cls,txt){
+      var t=document.createElement('th'); t.className=cls;
+      t.textContent=txt; return t;
+    }
+    htr.appendChild(th('col-num',''));
+    htr.appendChild(th('col-q', label+' Question                    Name:'));
+    campers.forEach(function(c){
+      htr.appendChild(th('col-c', c));
+    });
+    /* Pad to 5 columns if fewer campers */
+    for(var p=campers.length;p<5;p++) htr.appendChild(th('col-c',''));
+    thead.appendChild(htr);
+    tbl.appendChild(thead);
+
+    var tbody=document.createElement('tbody');
+
+    /* Question rows */
+    QUESTIONS.forEach(function(q,qi){
+      var tr=document.createElement('tr'); tr.className='q-row';
+      var numTd=document.createElement('td'); numTd.className='col-num'; numTd.textContent=String(qi+1); tr.appendChild(numTd);
+      var qTd=document.createElement('td');  qTd.className='col-q';   qTd.textContent=q; tr.appendChild(qTd);
+      for(var ci=0;ci<5;ci++){ var td=document.createElement('td'); td.className='col-c'; tr.appendChild(td); }
+      tbody.appendChild(tr);
+    });
+
+    /* Two blank rows */
+    for(var b=0;b<2;b++){
+      var btr=document.createElement('tr'); btr.className='blank-row';
+      var btn=document.createElement('td'); btn.className='col-num'; btr.appendChild(btn);
+      var btq=document.createElement('td'); btq.className='col-q';   btr.appendChild(btq);
+      for(var bc=0;bc<5;bc++){ var btd=document.createElement('td'); btd.className='col-c'; btr.appendChild(btd); }
+      tbody.appendChild(btr);
+    }
+
+    tbl.appendChild(tbody);
+    return tbl;
+  }
+
+  /* ── Generate ── */
+  function generate(){
+    if(!rows.length){ alert('Please upload a spreadsheet first.'); return; }
+    var selectedSessions=getSelectedSessions();
+    if(!selectedSessions.length){ alert('Please select at least one session.'); return; }
+
+    /* Filter and sort: by session then last name */
+    var filtered=rows.filter(function(row){
+      var s=getval(row,'session')||'(no session)';
+      return selectedSessions.indexOf(s)>=0;
+    }).sort(function(a,b){
+      var sa=getval(a,'session'), sb=getval(b,'session');
+      if(sa<sb) return -1; if(sa>sb) return 1;
+      var aa=getval(a,'agegroup').toLowerCase(), ab=getval(b,'agegroup').toLowerCase();
+      if(aa<ab) return -1; if(aa>ab) return 1;
+      var la=getval(a,'last').toLowerCase(), lb=getval(b,'last').toLowerCase();
+      return la<lb?-1:la>lb?1:0;
+    });
+
+    if(!filtered.length){ alert('No campers found for the selected sessions.'); return; }
+
+    var pages=document.getElementById('pages'); pages.innerHTML='';
+    var pageCount=0;
+
+    /* Group by session + age group */
+    var groups={}, groupOrder=[];
+    filtered.forEach(function(row){
+      var s=getval(row,'session')||'(no session)';
+      var ag=getval(row,'agegroup')||'';
+      var key=s+'||'+ag;
+      if(!groups[key]){ groups[key]=[]; groupOrder.push({key:key,session:s,agegroup:ag}); }
+      groups[key].push(row);
+    });
+
+    groupOrder.forEach(function(g){
+      var campers=groups[g.key];
+      /* Split into pages of 5 */
+      for(var i=0;i<campers.length;i+=5){
+        pageCount++;
+        var chunk=campers.slice(i,i+5);
+        var names=chunk.map(function(row){
+          return ((getval(row,'first')+' '+getval(row,'last')).trim())||'Camper';
+        });
+
+        var pg=document.createElement('div'); pg.className='form-page';
+
+        /* Session + age group label */
+        var sl=document.createElement('div'); sl.className='form-session';
+        sl.textContent=g.session+(g.agegroup?' \u2014 '+g.agegroup:'');
+        pg.appendChild(sl);
+
+        /* Pre table */
+        pg.appendChild(makeTable('Pre', names));
+
+        /* Divider */
+        var div=document.createElement('div'); div.className='section-divider'; pg.appendChild(div);
+
+        /* Post table */
+        pg.appendChild(makeTable('Post', names));
+
+        /* Screen page label */
+        var lbl=document.createElement('div'); lbl.className='page-label no-print';
+        lbl.textContent='Page '+pageCount+' \u2014 '+g.session+(g.agegroup?' / '+g.agegroup:'')+' (campers '+(i+1)+'\u2013'+Math.min(i+5,campers.length)+')';
+        pg.insertBefore(lbl, pg.firstChild);
+
+        pages.appendChild(pg);
+      }
+    });
+
+    document.getElementById('preview-info').textContent=
+      filtered.length+' camper'+(filtered.length!==1?'s':'')+' across '+pageCount+' page'+(pageCount!==1?'s':'')+'.';
+    document.getElementById('preview-section').style.display='';
+    document.getElementById('btn-print').style.display='';
+  }
+
+}());
+</script>
+
+<style>
+@media print {
+  @page { size: letter landscape; margin: 0.4in; }
+  body  { background: white; }
+  .no-print { display: none !important; }
+  .preview-info { display: none !important; }
+  .ui { padding: 0; max-width: 100%; margin: 0; }
+  .form-page {
+    border: none; border-radius: 0;
+    margin: 0;
+    padding: 0.3in 0.35in 0.25in;
+    page-break-after: always;
+    width: auto;
+    min-height: auto;
+  }
+  .form-page:last-child { page-break-after: avoid; }
+  .page-label { display: none !important; }
+  .test-table th, .test-table td { font-size: 8.5pt; }
+  .test-table .hdr-row th { font-size: 8.5pt; }
+}
+</style>
+</body>
+</html>

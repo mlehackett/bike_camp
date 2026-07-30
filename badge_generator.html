@@ -389,7 +389,7 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
     var r = new FileReader();
     r.onload = function(e){
       try {
-        var wb   = XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        var wb   = XLSX.read(new Uint8Array(e.target.result),{type:'array',raw:true});
         var ws   = wb.Sheets[wb.SheetNames[0]];
         var data = XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
         if(!data||data.length<2){ sheetSt('File appears empty.'); return; }
@@ -424,7 +424,7 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
     var r = new FileReader();
     r.onload = function(e){
       try {
-        var wb   = XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        var wb   = XLSX.read(new Uint8Array(e.target.result),{type:'array',raw:true});
         var ws   = wb.Sheets[wb.SheetNames[0]];
         var data = XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
         if(!data||data.length<2){ ecSt('File appears empty.'); return; }
@@ -829,6 +829,25 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
     if(sessSel) on(sessSel,'change', buildSessionFilter);
   }
 
+  var DOB_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  /* Parse a literal "M/D/YYYY" or "YYYY-MM-DD" text date into "Mon D, YYYY" — no serial math. */
+  function parseDobText(str){
+    str = str.trim();
+    var m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if(m){
+      var mo=parseInt(m[1],10), d=parseInt(m[2],10), y=parseInt(m[3],10);
+      if(y<100) y += (y<50?2000:1900);
+      if(mo>=1&&mo<=12) return DOB_MONTHS[mo-1]+' '+d+', '+y;
+    }
+    var iso = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if(iso){
+      var y2=parseInt(iso[1],10), mo2=parseInt(iso[2],10), d2=parseInt(iso[3],10);
+      if(mo2>=1&&mo2<=12) return DOB_MONTHS[mo2-1]+' '+d2+', '+y2;
+    }
+    return str; /* unrecognized format — show as-is rather than guess */
+  }
+       
   function getval(row, key){
     var s=document.getElementById('col-'+key);
     if(!s) return '';
@@ -837,9 +856,10 @@ select { width: 100%; padding: 7px 9px; border: 1px solid #ccc;
     var v=row[i];
     if(v===null||v===undefined) return '';
     /* DOB column: if value is a number treat it as an Excel date serial */
-    if(key==='dob' && typeof v==='number') return excelSerialToStr(v);
+    if(key==='dob' && typeof v==='number') return excelSerialToStr(v);      // real xlsx serial — unchanged
+    if(key==='dob' && typeof v==='string' && v) return parseDobText(v);      // CSV text — new, simple path
     if(v instanceof Date) return excelSerialToStr(
-      Math.round((v.getTime() - Date.UTC(1899,11,30)) / 86400000));
+         Math.round((v.getTime() - Date.UTC(1899,11,30)) / 86400000));
     var str=String(v).trim();
     return str;
   }
